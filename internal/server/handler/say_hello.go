@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	pb "github.com/koba1108/grpc-server-go/pkg/protos/helloworld"
-	"google.golang.org/grpc"
 	"log"
 )
 
@@ -14,8 +13,4 @@ type GreeterServer struct {
 func (s *GreeterServer) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("Received: %v", in.GetName())
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
-}
-
-func BindHandlers(s *grpc.Server) {
-	pb.RegisterGreeterServer(s, &GreeterServer{})
 }

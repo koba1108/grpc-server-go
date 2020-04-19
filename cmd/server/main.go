@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	address = ":50051"
+	address = ":9090"
 )
 
 func main() {
@@ -20,6 +20,7 @@ func main() {
 	s := grpc.NewServer()
 	handler.BindHandlers(s)
 	reflection.Register(s)
+	log.Printf("server running port %v", address)
 	if err := s.Serve(listener); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

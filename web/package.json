@@ -11,6 +11,8 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
+    "google-protobuf": "^3.11.4",
+    "grpc-web": "^1.0.7",
     "nuxt": "^2.0.0"
   },
   "devDependencies": {}
