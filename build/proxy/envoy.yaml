@@ -27,6 +27,7 @@ static_resources:
                             prefix: "/"
                           route:
                             cluster: backend_grpc_service
+                            max_grpc_timeout: 0s
                       cors:
                         allow_origin_string_match:
                           - prefix: "*"
@@ -44,15 +45,13 @@ static_resources:
       type: strict_dns
       lb_policy: round_robin
       http2_protocol_options: {}
-      load_assignment:
-        cluster_name: backend_grpc_service
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: host.docker.internal
-                      port_value: 9090
+      health_checks:
+        - timeout: 5s
+          interval: 10s
+          unhealthy_threshold: 2
+          healthy_threshold: 2
+          tcp_health_check: {}
+      hosts: [{ socket_address: { address: host.docker.internal, port_value: 9090 } }]
 
 admin:
   access_log_path: /tmp/admin_access.log

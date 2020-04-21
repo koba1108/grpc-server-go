@@ -1,19 +1,17 @@
 <template>
   <div class="container">
     <div>
-      <p v-for="(r, index) in reply" :key="index">{{ r.getMessage }}</p>
+      <p v-for="(r, index) in reply" :key="index">{{ r }}</p>
     </div>
-    <p>message: {{ message }}</p>
     <label>
       <input type="text" v-model="message">
     </label>
-    <button @click="postMessage">POST</button>
+    <button @click="doPost">POST</button>
   </div>
 </template>
 
 <script>
-  import { Empty } from 'google-protobuf/google/protobuf/empty_pb'
-  import { client, request } from '../grpc/chat'
+  import { newChatClient, postMessage } from '../grpc/chat'
 
   export default {
     data() {
@@ -24,25 +22,28 @@
       }
     },
     methods: {
-      async postMessage() {
-        request.setMessage(this.message)
-        const res = await client.postMessage(request)
-        if(!res.getIsSuccess()) {
+      async doPost() {
+        const res = await postMessage(this.message)
+        if(res.getIsSuccess()) {
+          this.message = ''
+        } else {
           alert('error!')
         }
       },
       onReceiveMessage(message) {
         console.log('onReceiveMessage', message)
-      }
+        this.reply.push(message.getMessage())
+      },
+      streamErrorHandler(e) {
+        console.error('stream error', e)
+      },
     },
     mounted() {
-      this.stream = client.receiveMessage(new Empty())
-      this.stream.on('data', m => {
-        this.onReceiveMessage(m)
-      })
-      this.stream.on('error', e => {
-        console.error('stream error', e)
-      })
+      this.stream = newChatClient()
+      this.stream.on('data', this.onReceiveMessage)
+      this.stream.on('error', this.streamErrorHandler)
+      this.stream.on('status', m => console.log('status', m))
+      this.stream.on('end', m => console.log('end', m))
     },
   }
 </script>

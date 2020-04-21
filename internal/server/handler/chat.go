@@ -13,27 +13,34 @@ type ChatServer struct {
 }
 
 func (s *ChatServer) PostMessage(ctx context.Context, in *pb.Message) (*pb.MessageResult, error) {
-	log.Printf("Received: %v", in.GetMessage())
-	s.messages = append(s.messages, in)
+	if in != nil && in.GetMessage() != "" {
+		log.Printf("Received: %v", in.GetMessage())
+		s.messages = append(s.messages, in)
+	}
 	return &pb.MessageResult{IsSuccess: true}, nil
 }
 
 func (s *ChatServer) ReceiveMessage(_ *empty.Empty, stream pb.Chat_ReceiveMessageServer) error {
-	for _, m := range s.messages {
-		if err := stream.Send(&pb.Message{Message: m.GetMessage()}); err != nil {
-			return err
+	if s.messages != nil {
+		for _, m := range s.messages {
+			if err := stream.Send(&pb.Message{Message: m.GetMessage()}); err != nil {
+				return err
+			}
 		}
+	} else {
+		_ = stream.Send(&pb.Message{Message: "init"})
 	}
 
 	previousCount := len(s.messages)
 
 	for {
 		currentCount := len(s.messages)
-		if previousCount < currentCount {
+		if currentCount > 0 && previousCount < currentCount {
 			r := s.messages[currentCount-1]
-			// log.Printf("Sent: %v", r.GetMessage())
-			if err := stream.Send(&pb.Message{Message: r.GetMessage()}); err != nil {
-				return err
+			if r != nil {
+				if err := stream.Send(&pb.Message{Message: r.GetMessage()}); err != nil {
+					return err
+				}
 			}
 		}
 		previousCount = currentCount
